@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; }
+    @keyframes breathe-scale {
+      0%, 100% { transform: scale(1); background-color: rgba(47,79,74,0.55); }
+      45% { transform: scale(1.5); background-color: rgba(193,103,61,0.55); }
+      55% { transform: scale(1.5); background-color: rgba(193,103,61,0.55); }
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepia(1) saturate(2) hue-rotate(130deg); }
+  </style>
+</helmet>
+
+<div style="max-width:560px;margin:0 auto;min-height:100vh;background:#FBF6F0;font-family:'Work Sans',sans-serif;color:#2B2622;padding-bottom:56px;">
+
+  <header style="padding:28px 20px 16px;text-align:center;" data-screen-label="Cabecera">
+    <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;background:#E8EFEE;color:#2F4F4A;font-size:11px;font-weight:600;letter-spacing:0.02em;margin-bottom:12px;">
+      🌿 Tu guía de embarazo, semana a semana
+    </div>
+    <h1 style="font-family:'Lora',serif;font-size:30px;font-weight:600;color:#2F4F4A;margin:0;">Maternidad Serena</h1>
+    <p style="font-size:14px;color:#6B6058;margin:8px 0 0;line-height:1.5;">Hola, {{ motherName }} 💗 Ciencia real, sin agobios, para acompañarte en cada semana de tu embarazo.</p>
+  </header>
+
+  <div style="margin:0 16px 16px;background:#FFFFFF;border-radius:20px;padding:18px;border:1px solid #EAE3DB;">
+    <sc-if value="{{ hasDate }}" hint-placeholder-val="{{ false }}">
+      <p style="font-size:11px;font-weight:700;color:#9B9088;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 6px;">Tu fecha probable de parto</p>
+      <p style="font-family:'Lora',serif;font-size:20px;font-weight:600;color:#2F4F4A;margin:0;">{{ dueLabel }}</p>
+      <p style="font-size:12px;color:#6B6058;margin:6px 0 14px;">Estás de <strong>{{ currentComputedWeek }} semanas</strong> · quedan aprox. {{ daysLeft }} días</p>
+      <label style="font-size:11px;color:#9B9088;">Cambiar fecha de tu última regla</label>
+      <input type="date" value="{{ lmpDate }}" onChange="{{ handleLmpChange }}" max="{{ todayIso }}" style="width:100%;box-sizing:border-box;margin-top:6px;padding:10px 12px;border-radius:12px;border:1px solid #EAE3DB;font-size:14px;font-family:'Work Sans',sans-serif;color:#2B2622;background:#FBF6F0;">
+    </sc-if>
+    <sc-if value="{{ noDate }}" hint-placeholder-val="{{ true }}">
+      <p style="font-size:13px;color:#6B6058;margin:0 0 10px;line-height:1.5;">Añade el primer día de tu última regla y calculamos tu semana exacta, tu fecha probable de parto y personalizamos todo el contenido para ti.</p>
+      <label style="font-size:11px;color:#9B9088;">Primer día de tu última regla</label>
+      <input type="date" value="{{ lmpDate }}" onChange="{{ handleLmpChange }}" max="{{ todayIso }}" style="width:100%;box-sizing:border-box;margin-top:6px;padding:10px 12px;border-radius:12px;border:1px solid #EAE3DB;font-size:14px;font-family:'Work Sans',sans-serif;color:#2B2622;background:#FBF6F0;">
+      <p style="font-size:11px;color:#9B9088;margin-top:10px;">Mientras tanto, te mostramos la semana 12 como ejemplo.</p>
+    </sc-if>
+  </div>
+
+  <nav style="display:flex;gap:6px;padding:0 16px 12px;">
+    <sc-if value="{{ showSemana }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ goSemana }}" style="flex:1;padding:10px 4px;border-radius:14px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;border:none;font-family:'Work Sans',sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;background:#2F4F4A;color:#fff;">
+        <span style="font-size:17px;">🌱</span>
+        <span>Mi semana</span>
+      </button>
+    </sc-if>
+    <sc-if value="{{ noShowSemana }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ goSemana }}" style="flex:1;padding:10px 4px;border-radius:14px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;border:none;font-family:'Work Sans',sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;color:#6B6058;">
+        <span style="font-size:17px;">🌱</span>
+        <span>Mi semana</span>
+      </button>
+    </sc-if>
+
+    <sc-if value="{{ showNutricion }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ goNutricion }}" style="flex:1;padding:10px 4px;border-radius:14px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;border:none;font-family:'Work Sans',sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;background:#2F4F4A;color:#fff;">
+        <span style="font-size:17px;">🥑</span>
+        <span>Nutrición</span>
+      </button>
+    </sc-if>
+    <sc-if value="{{ noShowNutricion }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ goNutricion }}" style="flex:1;padding:10px 4px;border-radius:14px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;border:none;font-family:'Work Sans',sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;color:#6B6058;">
+        <span style="font-size:17px;">🥑</span>
+        <span>Nutrición</span>
+      </button>
+    </sc-if>
+
+    <sc-if value="{{ showSintomas }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ goSintomas }}" style="flex:1;padding:10px 4px;border-radius:14px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;border:none;font-family:'Work Sans',sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;background:#2F4F4A;color:#fff;">
+        <span style="font-size:17px;">🔍</span>
+        <span>Calma/Alarma</span>
+      </button>
+    </sc-if>
+    <sc-if value="{{ noShowSintomas }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ goSintomas }}" style="flex:1;padding:10px 4px;border-radius:14px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;border:none;font-family:'Work Sans',sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;color:#6B6058;">
+        <span style="font-size:17px;">🔍</span>
+        <span>Calma/Alarma</span>
+      </button>
+    </sc-if>
+
+    <sc-if value="{{ showCalma }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ goCalma }}" style="flex:1;padding:10px 4px;border-radius:14px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;border:none;font-family:'Work Sans',sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;background:#2F4F4A;color:#fff;">
+        <span style="font-size:17px;">🧘‍♀️</span>
+        <span>Calma</span>
+      </button>
+    </sc-if>
+    <sc-if value="{{ noShowCalma }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ goCalma }}" style="flex:1;padding:10px 4px;border-radius:14px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;border:none;font-family:'Work Sans',sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;color:#6B6058;">
+        <span style="font-size:17px;">🧘‍♀️</span>
+        <span>Calma</span>
+      </button>
+    </sc-if>
+  </nav>
+
+  <div style="margin:0 16px 16px;background:#FFFFFF;border-radius:16px;padding:12px 14px;border:1px solid #EAE3DB;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+    <div>
+      <p style="font-size:12px;font-weight:700;color:#2F4F4A;margin:0;">🛡️ Modo Zen</p>
+      <p style="font-size:10.5px;color:#9B9088;margin:2px 0 0;line-height:1.4;">Oculta el detalle clínico y deja solo lo esencial para estar tranquila.</p>
+    </div>
+    <button onClick="{{ onToggleZen }}" style="{{ zenBtnStyle }}">{{ zenBtnLabel }}</button>
+  </div>
+
+  <sc-if value="{{ showSemana }}" hint-placeholder-val="{{ true }}">
+    <main style="padding:0 16px;display:flex;flex-direction:column;gap:16px;" data-screen-label="Mi semana">
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <h2 style="font-family:'Lora',serif;font-size:16px;color:#2F4F4A;margin:0;">Así evoluciona tu embarazo</h2>
+
+        <div style="background:#FFFFFF;border-radius:16px;padding:14px;border:1px solid #EAE3DB;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <p style="font-size:12px;font-weight:700;color:#2F4F4A;margin:0;">1️⃣ Primer trimestre · Semanas 1–13</p>
+            <sc-if value="{{ isT1Current }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size:9.5px;font-weight:700;color:#C1673D;">ESTÁS AQUÍ</span>
+            </sc-if>
+          </div>
+          <p style="font-size:12px;color:#6B6058;margin:4px 0 0;line-height:1.5;">Se forman todos los órganos principales. Es normal sentir cansancio, náuseas y emociones a flor de piel.</p>
+        </div>
+
+        <div style="background:#FFFFFF;border-radius:16px;padding:14px;border:1px solid #EAE3DB;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <p style="font-size:12px;font-weight:700;color:#2F4F4A;margin:0;">2️⃣ Segundo trimestre · Semanas 14–27</p>
+            <sc-if value="{{ isT2Current }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size:9.5px;font-weight:700;color:#C1673D;">ESTÁS AQUÍ</span>
+            </sc-if>
+          </div>
+          <p style="font-size:12px;color:#6B6058;margin:4px 0 0;line-height:1.5;">Sueles recuperar energía y notar los primeros movimientos. La tripa crece y se hace visible.</p>
+        </div>
+
+        <div style="background:#FFFFFF;border-radius:16px;padding:14px;border:1px solid #EAE3DB;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <p style="font-size:12px;font-weight:700;color:#2F4F4A;margin:0;">3️⃣ Tercer trimestre · Semanas 28–40</p>
+            <sc-if value="{{ isT3Current }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size:9.5px;font-weight:700;color:#C1673D;">ESTÁS AQUÍ</span>
+            </sc-if>
+          </div>
+          <p style="font-size:12px;color:#6B6058;margin:4px 0 0;line-height:1.5;">Tu bebé gana peso rápido y se prepara para nacer. Aumentan las molestias físicas, pero ya casi lo tienes.</p>
+        </div>
+      </div>
+
+      <div style="background:#2F4F4A;border-radius:22px;padding:20px;color:#fff;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#BFD1CD;margin:0;">{{ trimesterLabel }} · {{ trimesterRange }}</p>
+          <sc-if value="{{ showBackToCurrent }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ onGoToCurrentWeek }}" style="font-size:10px;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:999px;padding:5px 10px;cursor:pointer;white-space:nowrap;">Mi semana actual</button>
+          </sc-if>
+        </div>
+        <p style="font-family:'Lora',serif;font-size:34px;font-weight:700;margin:6px 0 0;">Semana {{ selectedWeek }}</p>
+        <div style="height:6px;background:rgba(255,255,255,0.2);border-radius:999px;margin-top:12px;overflow:hidden;">
+          <div style="height:100%;background:#C1673D;border-radius:999px;width:{{ progressPct }}%;"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;">
+          <button onClick="{{ prevWeek }}" style="width:32px;height:32px;flex-shrink:0;border-radius:999px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:16px;cursor:pointer;">−</button>
+          <input type="range" min="1" max="40" value="{{ selectedWeek }}" onChange="{{ handleWeekSlider }}" style="flex:1;accent-color:#C1673D;">
+          <button onClick="{{ nextWeek }}" style="width:32px;height:32px;flex-shrink:0;border-radius:999px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:16px;cursor:pointer;">+</button>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border-radius:20px;padding:18px;border:1px solid #EAE3DB;">
+        <p style="font-size:11px;font-weight:700;color:#C1673D;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 6px;">👶 Tu bebé esta semana</p>
+        <p style="font-family:'Lora',serif;font-size:18px;color:#2B2622;margin:0 0 8px;">Del tamaño de {{ weekSize }}</p>
+        <sc-if value="{{ showExtra }}" hint-placeholder-val="{{ false }}">
+          <p style="font-size:12px;color:#9B9088;margin:0 0 10px;">Mide aprox. {{ weekLength }} y pesa {{ weekWeight }}</p>
+        </sc-if>
+        <p style="font-size:13px;color:#4A4540;line-height:1.6;margin:0;">{{ weekMilestone }}</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <h3 style="font-family:'Lora',serif;font-size:15px;color:#2F4F4A;margin:0;">🤰 Cambios en tu cuerpo</h3>
+        <sc-for list="{{ bodyChangesList }}" as="item" hint-placeholder-count="3">
+          <div style="background:#FFFFFF;border-radius:16px;padding:14px;border:1px solid #EAE3DB;">
+            <p style="font-size:12.5px;font-weight:700;color:#2B2622;margin:0 0 4px;">{{ item.t }}</p>
+            <p style="font-size:12px;color:#6B6058;margin:0;line-height:1.5;">{{ item.d }}</p>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <h3 style="font-family:'Lora',serif;font-size:15px;color:#2F4F4A;margin:0;">😴 Sueño y descanso</h3>
+        <sc-for list="{{ sleepList }}" as="item" hint-placeholder-count="3">
+          <div style="background:#FFFFFF;border-radius:16px;padding:14px;border:1px solid #EAE3DB;">
+            <p style="font-size:12.5px;font-weight:700;color:#2B2622;margin:0 0 4px;">{{ item.t }}</p>
+            <p style="font-size:12px;color:#6B6058;margin:0;line-height:1.5;">{{ item.d }}</p>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <h3 style="font-family:'Lora',serif;font-size:15px;color:#2F4F4A;margin:0;">🚶‍♀️ Movimiento seguro</h3>
+        <sc-for list="{{ movementList }}" as="item" hint-placeholder-count="3">
+          <div style="background:#FFFFFF;border-radius:16px;padding:14px;border:1px solid #EAE3DB;">
+            <p style="font-size:12.5px;font-weight:700;color:#2B2622;margin:0 0 4px;">{{ item.t }}</p>
+            <p style="font-size:12px;color:#6B6058;margin:0;line-height:1.5;">{{ item.d }}</p>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <h3 style="font-family:'Lora',serif;font-size:15px;color:#2F4F4A;margin:0;">💗 Bienestar emocional</h3>
+        <sc-for list="{{ emotionalList }}" as="item" hint-placeholder-count="3">
+          <div style="background:#FFFFFF;border-radius:16px;padding:14px;border:1px solid #EAE3DB;">
+            <p style="font-size:12.5px;font-weight:700;color:#2B2622;margin:0 0 4px;">{{ item.t }}</p>
+            <p style="font-size:12px;color:#6B6058;margin:0;line-height:1.5;">{{ item.d }}</p>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <h3 style="font-family:'Lora',serif;font-size:15px;color:#2F4F4A;margin:0;">✅ Preparación práctica de esta etapa</h3>
+        <div style="background:#FFFFFF;border-radius:20px;padding:8px;border:1px solid #EAE3DB;display:flex;flex-direction:column;gap:4px;">
+          <sc-for list="{{ practicalChecklist }}" as="item" hint-placeholder-count="4">
+            <div onClick="{{ item.toggle }}" style="{{ item.rowStyle }}">
+              <div style="{{ item.checkStyle }}">
+                <sc-if value="{{ item.checked }}" hint-placeholder-val="{{ false }}">✓</sc-if>
+              </div>
+              <div>
+                <p style="font-size:12.5px;font-weight:700;color:#2B2622;margin:0;">{{ item.label }}</p>
+                <p style="font-size:11.5px;color:#6B6058;margin:3px 0 0;line-height:1.5;">{{ item.desc }}</p>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ showNutricion }}" hint-placeholder-val="{{ false }}">
+    <main style="padding:0 16px;display:flex;flex-direction:column;gap:16px;" data-screen-label="Nutrición">
+
+      <div style="background:#F5E4DA;border-radius:20px;padding:16px;border:1px solid #EAE3DB;">
+        <p style="font-size:11px;font-weight:700;color:#A9782E;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 6px;">💡 La regla de oro del 80/20</p>
+        <p style="font-size:12.5px;color:#6B5A4A;margin:0;line-height:1.6;">El 80% de un embarazo sano depende de solo 4 cosas: tomar tu ácido fólico/yodo, no beber alcohol, lavar bien los vegetales y cocinar bien la carne, el pescado y el huevo. Lo demás son detalles que solo aumentan el agobio. Tu cuerpo sabe qué hacer.</p>
+      </div>
+
+      <div style="background:#E7EFE7;border-radius:16px;padding:14px;border:1px solid #EAE3DB;">
+        <p style="font-size:12px;font-weight:700;color:#4F7358;margin:0 0 4px;">🎯 Foco de esta etapa</p>
+        <p style="font-size:12px;color:#4A4540;margin:0;line-height:1.5;">{{ nutritionFocus }}</p>
+      </div>
+
+      <div style="background:#FFFFFF;padding:18px;border-radius:20px;border:1px solid #EAE3DB;">
+        <p style="font-size:15px;font-weight:700;color:#2B2622;margin:0 0 2px;">🍏 Buscador de alimentos</p>
+        <p style="font-size:11.5px;color:#9B9088;margin:0 0 12px;">Escribe qué quieres comer y descubre si es apto al instante.</p>
+        <input type="text" value="{{ foodQuery }}" onChange="{{ onFoodInput }}" placeholder="Ej. jamón, café, queso, sushi..." style="width:100%;box-sizing:border-box;padding:11px 14px;border-radius:12px;border:1px solid #EAE3DB;font-size:14px;font-family:'Work Sans',sans-serif;background:#FBF6F0;color:#2B2622;">
+
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;max-height:420px;overflow-y:auto;">
+          <sc-for list="{{ foodResults }}" as="item" hint-placeholder-count="4">
+            <div style="background:#FBF6F0;padding:12px 14px;border-radius:14px;border-left:4px solid {{ item.tagColor }};">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                <p style="font-size:12.5px;font-weight:700;color:#2B2622;margin:0;">{{ item.name }}</p>
+                <span style="font-size:9px;font-weight:700;text-transform:uppercase;padding:3px 7px;border-radius:999px;background:{{ item.tagBg }};color:{{ item.tagColor }};white-space:nowrap;">{{ item.tag }}</span>
+              </div>
+              <p style="font-size:11.5px;color:#6B6058;margin:5px 0 0;line-height:1.5;">{{ item.desc }}</p>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="background:#FFFFFF;padding:16px;border-radius:16px;border:1px solid #EAE3DB;display:flex;gap:10px;">
+          <span style="font-size:22px;">💧</span>
+          <div>
+            <p style="font-size:12.5px;font-weight:700;color:#2B2622;margin:0;">1. Lavado sin obsesión</p>
+            <p style="font-size:12px;color:#6B6058;margin:4px 0 0;line-height:1.5;">Lava bien la fruta y verdura que comas cruda bajo el grifo. Previene la toxoplasmosis de forma sencilla.</p>
+          </div>
+        </div>
+        <div style="background:#FFFFFF;padding:16px;border-radius:16px;border:1px solid #EAE3DB;display:flex;gap:10px;">
+          <span style="font-size:22px;">🍳</span>
+          <div>
+            <p style="font-size:12.5px;font-weight:700;color:#2B2622;margin:0;">2. Cocina bien carne, huevo y pescado</p>
+            <p style="font-size:12px;color:#6B6058;margin:4px 0 0;line-height:1.5;">Sin rosados por dentro ni yemas líquidas. El calor destruye los patógenos (Listeria, Salmonella, Toxoplasma).</p>
+          </div>
+        </div>
+        <div style="background:#FFFFFF;padding:16px;border-radius:16px;border:1px solid #EAE3DB;display:flex;gap:10px;">
+          <span style="font-size:22px;">🧀</span>
+          <div>
+            <p style="font-size:12.5px;font-weight:700;color:#2B2622;margin:0;">3. El truco del "pasteurizado"</p>
+            <p style="font-size:12px;color:#6B6058;margin:4px 0 0;line-height:1.5;">Lee la etiqueta: si dice "leche pasteurizada", el queso es seguro, sea cabra, brie o mozzarella.</p>
+          </div>
+        </div>
+        <div style="background:#FFFFFF;padding:16px;border-radius:16px;border:1px solid #EAE3DB;display:flex;gap:10px;">
+          <span style="font-size:22px;">💊</span>
+          <div>
+            <p style="font-size:12.5px;font-weight:700;color:#2B2622;margin:0;">4. Ácido fólico + yodo, cada día</p>
+            <p style="font-size:12px;color:#6B6058;margin:4px 0 0;line-height:1.5;">El único suplemento imprescindible según la evidencia. Tómalo cada mañana a la misma hora.</p>
+          </div>
+        </div>
+      </div>
+
+      <sc-if value="{{ showExtra }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#FFFFFF;padding:16px;border-radius:20px;border:1px solid #EAE3DB;">
+          <p style="font-size:11px;font-weight:700;color:#9B9088;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 10px;">Nutrientes bajo la lupa (detalle clínico)</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div style="background:#FBF6F0;padding:10px;border-radius:12px;text-align:center;">
+              <span style="font-size:18px;display:block;">🥩</span>
+              <span style="font-size:11px;font-weight:700;display:block;margin-top:4px;">Hierro</span>
+              <span style="font-size:9.5px;color:#9B9088;">Evita la anemia gestacional</span>
+            </div>
+            <div style="background:#FBF6F0;padding:10px;border-radius:12px;text-align:center;">
+              <span style="font-size:18px;display:block;">🥛</span>
+              <span style="font-size:11px;font-weight:700;display:block;margin-top:4px;">Calcio</span>
+              <span style="font-size:9.5px;color:#9B9088;">Para los huesos del bebé</span>
+            </div>
+            <div style="background:#FBF6F0;padding:10px;border-radius:12px;text-align:center;">
+              <span style="font-size:18px;display:block;">🐟</span>
+              <span style="font-size:11px;font-weight:700;display:block;margin-top:4px;">Omega 3 (DHA)</span>
+              <span style="font-size:9.5px;color:#9B9088;">Desarrollo cerebral</span>
+            </div>
+            <div style="background:#FBF6F0;padding:10px;border-radius:12px;text-align:center;">
+              <span style="font-size:18px;display:block;">☀️</span>
+              <span style="font-size:11px;font-weight:700;display:block;margin-top:4px;">Vitamina D</span>
+              <span style="font-size:9.5px;color:#9B9088;">Fija el calcio</span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ showSintomas }}" hint-placeholder-val="{{ false }}">
+    <main style="padding:0 16px;display:flex;flex-direction:column;gap:16px;" data-screen-label="Calma vs Alarma">
+
+      <div style="background:#FFFFFF;padding:16px;border-radius:20px;border:1px solid #EAE3DB;">
+        <p style="font-size:15px;font-weight:700;color:#2B2622;margin:0;">🛑 Decodificador de señales</p>
+        <p style="font-size:12px;color:#6B6058;margin:8px 0 0;line-height:1.6;">Toca cualquier sensación para saber, con ciencia y calma, qué significa de verdad.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;">
+          <span style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;background:#E7EFE7;color:#4F7358;font-size:10.5px;font-weight:600;"><span style="width:8px;height:8px;border-radius:999px;background:#4F7358;"></span>Normal</span>
+          <span style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;background:#F7E4E1;color:#A8433A;font-size:10.5px;font-weight:600;"><span style="width:8px;height:8px;border-radius:999px;background:#A8433A;"></span>Urgencia</span>
+          <span style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;background:#F5EBD8;color:#A9782E;font-size:10.5px;font-weight:600;"><span style="width:8px;height:8px;border-radius:999px;background:#A9782E;"></span>Sin prisa</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <sc-for list="{{ symptomsList }}" as="item" hint-placeholder-count="8">
+          <button onClick="{{ item.select }}" style="width:100%;text-align:left;background:#FFFFFF;border:1px solid #EAE3DB;border-radius:16px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;font-family:'Work Sans',sans-serif;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:20px;">{{ item.emoji }}</span>
+              <div>
+                <p style="font-size:12px;font-weight:700;color:#2B2622;margin:0;">{{ item.title }}</p>
+                <p style="font-size:10px;color:#9B9088;margin:2px 0 0;">{{ item.phase }}</p>
+              </div>
+            </div>
+            <span style="width:9px;height:9px;border-radius:999px;background:{{ item.dotBg }};flex-shrink:0;"></span>
+          </button>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ hasSelectedSymptom }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#2B2622;color:#fff;padding:18px;border-radius:20px;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #46403A;padding-bottom:12px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:26px;">{{ selectedSymptom.emoji }}</span>
+              <div>
+                <p style="font-size:13px;font-weight:700;color:#fff;margin:0;">{{ selectedSymptom.title }}</p>
+                <span style="font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:999px;margin-top:4px;display:inline-block;background:{{ selectedSymptom.tagBg }};color:{{ selectedSymptom.tagColor }};">{{ selectedSymptom.tagLabel }}</span>
+              </div>
+            </div>
+            <button onClick="{{ onCloseSymptom }}" style="background:none;border:none;color:#9B9088;font-size:12px;cursor:pointer;">✕</button>
+          </div>
+          <sc-if value="{{ showExtra }}" hint-placeholder-val="{{ false }}">
+            <p style="font-size:11px;font-weight:700;color:#7FA88A;margin:0 0 4px;">🧠 ¿Qué pasa realmente?</p>
+            <p style="font-size:12.5px;color:#D8D2CA;margin:0 0 14px;line-height:1.6;">{{ selectedSymptom.reason }}</p>
+          </sc-if>
+          <p style="font-size:11px;font-weight:700;color:#8FB8D8;margin:0 0 4px;">🛡️ Qué debes hacer</p>
+          <p style="font-size:12.5px;color:#D8D2CA;margin:0;line-height:1.6;">{{ selectedSymptom.advice }}</p>
+        </div>
+      </sc-if>
+
+      <div style="background:#2F4F4A;color:#EAF1EF;padding:18px;border-radius:20px;">
+        <p style="font-size:12.5px;font-weight:700;color:#BFE0C9;margin:0 0 6px;">💡 Pareto clínico: "nunca busques en Google"</p>
+        <p style="font-size:12px;color:#DCE7E4;margin:0;line-height:1.6;">Si te encuentras mal o tienes una duda, no busques en internet: los algoritmos priorizan los casos raros para captar tu atención. Llama siempre primero a tu matrona o ginecólogo. Tu paz mental importa tanto como una buena alimentación.</p>
+      </div>
+
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ showCalma }}" hint-placeholder-val="{{ false }}">
+    <main style="padding:0 16px;display:flex;flex-direction:column;gap:16px;" data-screen-label="Rincón de la calma">
+
+      <div style="background:#FFFFFF;padding:20px;border-radius:20px;border:1px solid #EAE3DB;text-align:center;">
+        <span style="font-size:34px;">🧘‍♀️</span>
+        <p style="font-family:'Lora',serif;font-size:17px;color:#2F4F4A;margin:8px 0 0;">Tu paz es tu superpoder</p>
+        <p style="font-size:12.5px;color:#6B6058;margin:8px 0 0;line-height:1.6;">La ansiedad gestacional es una respuesta normal. Puedes calmarla con respiración consciente: reduce hormonas del estrés en pocos minutos.</p>
+      </div>
+
+      <div style="background:#2B2622;color:#fff;padding:20px;border-radius:20px;text-align:center;">
+        <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#7FA88A;margin:0;">Respiración antiestrés 4-4-8</p>
+        <p style="font-size:11px;color:#9B9088;margin:6px 0 0;">Úsala un minuto cada vez que te asalte una duda.</p>
+        <div style="display:flex;justify-content:center;align-items:center;height:130px;margin:14px 0;">
+          <div style="width:92px;height:92px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#2B2622;animation:breathe-scale 8s infinite ease-in-out;">{{ breathText }}</div>
+        </div>
+        <p style="font-size:11px;color:#D8D2CA;margin:0;">Inhala (4s) · Mantén (4s) · Exhala despacio (8s)</p>
+      </div>
+
+      <div style="background:#F5E4DA;padding:20px;border-radius:20px;text-align:center;border:1px solid #EAE3DB;">
+        <p style="font-size:11px;font-weight:700;color:#9B9088;text-transform:uppercase;letter-spacing:0.04em;margin:0;">Tu afirmación de paz</p>
+        <p style="font-family:'Lora',serif;font-size:15px;font-weight:600;color:#2B2622;margin:14px 0;font-style:italic;line-height:1.6;">"{{ calmQuote }}"</p>
+        <button onClick="{{ onNextQuote }}" style="font-size:11.5px;font-weight:700;color:#2F4F4A;background:#FFFFFF;border:1px solid #EAE3DB;border-radius:999px;padding:8px 16px;cursor:pointer;">🔄 Siguiente afirmación</button>
+      </div>
+
+    </main>
+  </sc-if>
+
+  <footer style="margin:24px 16px 0;padding:16px;background:#2B2622;border-radius:16px;color:#9B9088;font-size:10.5px;text-align:center;line-height:1.7;">
+    <p style="margin:0;">© Maternidad Serena 💖 — hecho con ciencia y cariño, para {{ motherName }}.</p>
+    <p style="margin:6px 0 0;">📞 Emergencias: <strong style="color:#fff;">112</strong> · 🏥 SITE (Info. Embarazada): <strong style="color:#fff;">918 22 24 36</strong></p>
+  </footer>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420},&quot;motherName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Inés&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;zenModeDefault&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;defaultWeek&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:4,&quot;min&quot;:1,&quot;max&quot;:40,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;unit&quot;:&quot;semana&quot;}}">
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+function isoToday() {
+  const d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+function computeWeekFromLmp(lmpStr) {
+  if (!lmpStr) return null;
+  const lmp = new Date(lmpStr + 'T00:00:00');
+  const today = new Date();
+  const diffDays = daysBetween(lmp, today);
+  const week = Math.floor(diffDays / 7) + 1;
+  return Math.max(1, Math.min(42, week));
+}
+function trimesterOfWeek(week) {
+  if (week <= 13) return 1;
+  if (week <= 27) return 2;
+  return 3;
+}
+const MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function dueDateLabel(lmpStr) {
+  const lmp = new Date(lmpStr + 'T00:00:00');
+  const due = new Date(lmp.getTime() + 280 * 86400000);
+  return due.getDate() + ' de ' + MONTHS_ES[due.getMonth()] + ' de ' + due.getFullYear();
+}
+function daysRemaining(lmpStr) {
+  const lmp = new Date(lmpStr + 'T00:00:00');
+  const due = new Date(lmp.getTime() + 280 * 86400000);
+  const today = new Date();
+  return Math.max(0, daysBetween(today, due));
+}
+
+const WEEKLY_DATA = [
+  { s: 'una cabeza de alfiler', l: '—', w: '—', m: 'Tu cuerpo se prepara para ovular. Esta semana se cuenta desde tu última regla, aunque técnicamente aún no hay embarazo.' },
+  { s: 'una cabeza de alfiler', l: '—', w: '—', m: 'Ocurre la ovulación. Si hay fecundación, sucederá en los próximos días.' },
+  { s: 'una cabeza de alfiler', l: '0.1 mm', w: '—', m: 'El óvulo fecundado viaja hacia el útero y empieza a dividirse en múltiples células.' },
+  { s: 'una semilla de amapola', l: '2 mm', w: 'menos de 1 g', m: 'El embrión se implanta en el útero y comienza a formarse la placenta.' },
+  { s: 'una semilla de sésamo', l: '3 mm', w: 'menos de 1 g', m: 'Se forma el tubo neural, origen del cerebro y la médula espinal.' },
+  { s: 'una lenteja', l: '6 mm', w: 'menos de 1 g', m: 'El corazón empieza a latir y aparecen los primeros esbozos de brazos y piernas.' },
+  { s: 'un arándano', l: '1.3 cm', w: '1 g', m: 'Se forman los dedos de manos y pies, aunque aún unidos por una membrana.' },
+  { s: 'una frambuesa', l: '1.6 cm', w: '1 g', m: 'Todos los órganos principales ya están presentes y siguen madurando.' },
+  { s: 'una aceituna', l: '2.3 cm', w: '2 g', m: 'Se forman los párpados y el embrión empieza a moverse, aunque no lo notarás todavía.' },
+  { s: 'un kumquat', l: '3.1 cm', w: '4 g', m: 'Termina el periodo embrionario: a partir de ahora se le llama oficialmente feto.' },
+  { s: 'un higo', l: '4.1 cm', w: '7 g', m: 'Los huesos comienzan a endurecerse y puede tener hipo.' },
+  { s: 'una ciruela pequeña', l: '5.4 cm', w: '14 g', m: 'Se desarrollan los reflejos. Termina el primer trimestre y baja mucho el riesgo de aborto.' },
+  { s: 'un melocotón', l: '7.4 cm', w: '23 g', m: 'Se forman las huellas dactilares y las cuerdas vocales.' },
+  { s: 'un limón', l: '8.7 cm', w: '43 g', m: 'Puede fruncir el ceño y sus riñones ya producen orina.' },
+  { s: 'una manzana', l: '10.1 cm', w: '70 g', m: 'Empieza a percibir la luz a través de los párpados, aún cerrados.' },
+  { s: 'un aguacate', l: '11.6 cm', w: '100 g', m: 'El corazón bombea mucha sangre. Podrías empezar a notar los primeros movimientos.' },
+  { s: 'una pera', l: '13 cm', w: '140 g', m: 'Acumula grasa parda y su esqueleto pasa de cartílago a hueso.' },
+  { s: 'un pimiento', l: '14.2 cm', w: '190 g', m: 'Empieza a oír sonidos apagados. En la ecografía ya se puede intuir el sexo.' },
+  { s: 'un tomate grande', l: '15.3 cm', w: '240 g', m: 'Una capa protectora, la vérnix caseosa, empieza a cubrir su piel.' },
+  { s: 'un plátano', l: '25.6 cm', w: '300 g', m: '¡Mitad del embarazo! Toca la ecografía morfológica.' },
+  { s: 'una zanahoria', l: '26.7 cm', w: '360 g', m: 'Se mueve con más fuerza y traga pequeñas cantidades de líquido amniótico.' },
+  { s: 'una papaya pequeña', l: '27.8 cm', w: '430 g', m: 'Sus cejas y párpados ya están definidos.' },
+  { s: 'un mango', l: '28.9 cm', w: '501 g', m: 'Empieza a desarrollar patrones de sueño y puede oír tu voz.' },
+  { s: 'una mazorca de maíz', l: '30 cm', w: '600 g', m: 'Sus pulmones empiezan a producir surfactante, clave para respirar al nacer.' },
+  { s: 'un nabo', l: '34.6 cm', w: '660 g', m: 'Empieza a acumular grasa bajo la piel y responde a estímulos externos.' },
+  { s: 'un calabacín', l: '35.6 cm', w: '760 g', m: 'Abre los ojos por primera vez.' },
+  { s: 'una coliflor', l: '36.6 cm', w: '875 g', m: 'Su cerebro está muy activo. Termina el segundo trimestre.' },
+  { s: 'una berenjena', l: '37.6 cm', w: '1 kg', m: 'Puede parpadear y ya tiene fases de sueño con movimiento ocular: sueña.' },
+  { s: 'una calabaza pequeña', l: '38.6 cm', w: '1.15 kg', m: 'Sus huesos están formados aunque todavía blandos; notarás patadas más fuertes.' },
+  { s: 'un repollo', l: '39.9 cm', w: '1.3 kg', m: 'Gana peso rápidamente y su cerebro desarrolla más surcos.' },
+  { s: 'un coco', l: '41.1 cm', w: '1.5 kg', m: 'Ya tiene los cinco sentidos funcionando.' },
+  { s: 'una jícama', l: '42.4 cm', w: '1.7 kg', m: 'Sus uñas llegan a las puntas de los dedos y practica movimientos de respiración.' },
+  { s: 'una piña', l: '43.7 cm', w: '1.9 kg', m: 'Los huesos del cráneo siguen flexibles, algo clave para el parto.' },
+  { s: 'un melón cantalupo', l: '45 cm', w: '2.1 kg', m: 'Su sistema inmunitario sigue madurando con tus anticuerpos.' },
+  { s: 'un melón grande', l: '46.2 cm', w: '2.4 kg', m: 'Sus riñones están completamente desarrollados.' },
+  { s: 'un manojo de acelgas', l: '47.4 cm', w: '2.6 kg', m: 'Pierde el vello fino (lanugo) que cubría su piel.' },
+  { s: 'un puerro', l: '48.6 cm', w: '2.9 kg', m: 'Se considera "a término temprano". Sigue madurando pulmones y cerebro.' },
+  { s: 'una sandía pequeña', l: '49.8 cm', w: '3.1 kg', m: '"A término completo": ya está listo para nacer cuando decida llegar.' },
+  { s: 'una sandía mediana', l: '50.7 cm', w: '3.3 kg', m: 'Sigue acumulando grasa para regular su temperatura al nacer.' },
+  { s: 'una sandía grande', l: '51.2 cm', w: '3.5 kg', m: 'Fecha prevista de parto. Solo un 5% de los bebés nace justo este día: ten paciencia.' }
+];
+
+const TRIMESTER_CONTENT = {
+  1: {
+    label: 'Primer trimestre',
+    range: 'Semanas 1–13',
+    nutritionFocus: 'Prioriza el ácido fólico y el yodo, y evita el alcohol por completo. El resto de nutrientes los cubres con una dieta variada, sin obsesionarte.',
+    bodyChanges: [
+      { t: 'Tu útero empieza a crecer', d: 'Pasa del tamaño de un puño al de un pomelo pequeño, aunque por fuera casi no se note todavía.' },
+      { t: 'Pechos sensibles', d: 'Aumenta el riego sanguíneo y se preparan para la futura lactancia; la sensibilidad es normal.' },
+      { t: 'Cansancio intenso', d: 'La progesterona tiene un efecto sedante natural mientras tu cuerpo construye la placenta.' }
+    ],
+    sleep: [
+      { t: 'Duerme todo lo que tu cuerpo pida', d: 'El cansancio del primer trimestre es hormonal y real, no es pereza.' },
+      { t: 'Evita la cafeína por la tarde', d: 'Ayuda a que el descanso nocturno sea más profundo.' },
+      { t: 'Siestas cortas de 20-30 min', d: 'Recuperan energía sin dejarte más aturdida.' }
+    ],
+    movement: [
+      { t: 'Mantén tu actividad habitual moderada', d: 'Caminar o nadar suave es seguro salvo indicación contraria de tu matrona.' },
+      { t: 'Evita el sobrecalentamiento', d: 'Saunas o ejercicio muy intenso pueden subir tu temperatura corporal en exceso.' },
+      { t: 'Escucha las náuseas', d: 'Es normal reducir el ritmo si el malestar te lo pide; no te exijas más de la cuenta.' }
+    ],
+    emotional: [
+      { t: 'El miedo a perder el embarazo es normal', d: 'Casi todas las gestaciones que llegan con buen latido a la semana 12 evolucionan bien.' },
+      { t: 'Los cambios de humor son hormonales', d: 'No significan que algo vaya mal contigo ni con el bebé.' },
+      { t: 'Evita comparar tu embarazo con el de otras', d: 'Cada cuerpo y cada gestación tienen su propio ritmo.' }
+    ],
+    practical: [
+      { label: 'Primera cita con tu matrona', desc: 'En tu centro de salud, para abrir la cartilla de embarazo y resolver tus primeras dudas.' },
+      { label: 'Analítica de primer trimestre', desc: 'Suele pedirse entre la semana 8 y 10: revisa anemia, grupo sanguíneo, inmunidad a rubeola y más.' },
+      { label: 'Ecografía y cribado combinado (semana 11-13)', desc: 'Se mide la translucencia nucal y se calcula el riesgo de alteraciones cromosómicas.' },
+      { label: 'Ácido fólico + yodo cada día', desc: 'El suplemento más importante de todo el embarazo; tómalo a la misma hora para crear el hábito.' },
+      { label: 'Comunicar el embarazo en el trabajo cuando estés lista', desc: 'No hay prisa; hazlo cuando te sientas cómoda y conoce tus derechos laborales.' }
+    ]
+  },
+  2: {
+    label: 'Segundo trimestre',
+    range: 'Semanas 14–27',
+    nutritionFocus: 'Aumenta algo el hierro y el calcio, y añade pescado azul pequeño para el omega-3. Es la etapa de mayor apetito, disfrútala con calma.',
+    bodyChanges: [
+      { t: 'La energía suele mejorar', d: 'Muchas mujeres notan una mejoría notable del cansancio y las náuseas.' },
+      { t: 'La tripa se hace visible', d: 'El útero llega a la altura del ombligo hacia la semana 20.' },
+      { t: 'Puede aparecer congestión nasal o encías sensibles', d: 'El aumento de flujo sanguíneo afecta también a las mucosas.' }
+    ],
+    sleep: [
+      { t: 'Empieza a dormir de lado', d: 'Preferiblemente el izquierdo: mejora la circulación hacia el útero y el bebé.' },
+      { t: 'Un cojín de embarazada ayuda mucho', d: 'Sostiene la tripa y alivia la zona lumbar durante la noche.' },
+      { t: 'Evita tumbarte boca arriba mucho rato', d: 'El peso del útero puede comprimir vasos importantes.' }
+    ],
+    movement: [
+      { t: 'Paseos diarios y natación', d: 'De las actividades más recomendadas durante todo el embarazo.' },
+      { t: 'Yoga prenatal o suelo pélvico', d: 'Prepara tu cuerpo para el parto y ayuda a controlar la postura.' },
+      { t: 'Cuida tu espalda', d: 'El centro de gravedad cambia; fortalece la zona media con ejercicios suaves.' }
+    ],
+    emotional: [
+      { t: 'Suele ser la etapa de mayor bienestar', d: 'Muchas mujeres describen este tramo como su "luna de miel" del embarazo.' },
+      { t: 'Es normal preocuparte por la ecografía morfológica', d: 'La inmensa mayoría de los resultados son normales.' },
+      { t: 'Buen momento para informarte sobre el parto', d: 'Sin prisa, a tu ritmo, para llegar con más calma al tercer trimestre.' }
+    ],
+    practical: [
+      { label: 'Ecografía morfológica (semana 20)', desc: 'Revisión detallada de la anatomía del bebé. La inmensa mayoría son completamente normales.' },
+      { label: 'Test de O\u2019Sullivan (semana 24-28)', desc: 'Curva de glucosa para descartar diabetes gestacional; es rutinario, no una señal de alarma.' },
+      { label: 'Empieza a notar y reconocer los movimientos', desc: 'Desde la semana 18-20 aproximadamente. Cada bebé tiene su propio ritmo.' },
+      { label: 'Piensa en tu plan de parto', desc: 'Buen momento para informarte y anotar tus preferencias con calma, sin agobios.' },
+      { label: 'Considera un curso de preparación al parto', desc: 'Te ayuda a llegar con más información y menos miedo al momento del parto.' }
+    ]
+  },
+  3: {
+    label: 'Tercer trimestre',
+    range: 'Semanas 28–40',
+    nutritionFocus: 'Refuerza el hierro (la anemia es más frecuente ahora), cuida la fibra para el estreñimiento y haz comidas pequeñas y frecuentes si notas reflujo.',
+    bodyChanges: [
+      { t: 'El útero llega hasta las costillas', d: 'Es normal notar algo de falta de aire; el bebé ocupa mucho espacio.' },
+      { t: 'Aparecen contracciones de Braxton Hicks', d: 'Son de entrenamiento: irregulares e indoloras, preparan al útero para el parto.' },
+      { t: 'Hinchazón leve en pies y tobillos', d: 'Por el aumento de volumen sanguíneo; mejora al elevar las piernas.' }
+    ],
+    sleep: [
+      { t: 'El insomnio es muy frecuente', d: 'El tamaño de la tripa dificulta encontrar una postura cómoda.' },
+      { t: 'Duerme de lado con cojines de apoyo', d: 'Uno entre las rodillas y otro bajo la tripa alivia mucho.' },
+      { t: 'Eleva los pies antes de dormir', d: 'Reduce la hinchazón acumulada durante el día.' }
+    ],
+    movement: [
+      { t: 'Mantén paseos suaves', d: 'Ayudan a la circulación y pueden favorecer una buena posición del bebé.' },
+      { t: 'Evita estar boca arriba mucho tiempo', d: 'El útero puede comprimir la vena cava y darte mareo.' },
+      { t: 'Suelo pélvico y pelota de pilates', d: 'Alivian la presión pélvica y preparan el cuerpo para el parto.' }
+    ],
+    emotional: [
+      { t: 'Es normal mezclar ilusión y nervios por el parto', d: 'Hablar tus miedos con tu matrona reduce mucho la ansiedad.' },
+      { t: 'El "instinto de nido" es fisiológico', d: 'Si aparecen ganas de organizarlo todo, disfrútalo; si no aparece, tampoco pasa nada.' },
+      { t: 'Confía en tu cuerpo y en tu equipo médico', d: 'Has llegado hasta aquí; ya casi tienes a tu bebé en brazos.' }
+    ],
+    practical: [
+      { label: 'Cultivo de estreptococo B (semana 35-37)', desc: 'Prueba sencilla e indolora; si sale positivo, te pondrán un antibiótico preventivo durante el parto.' },
+      { label: 'Vacunas de tosferina y gripe', desc: 'Recomendadas por la evidencia científica para proteger al bebé en sus primeras semanas de vida.' },
+      { label: 'Prepara la maleta del hospital', desc: 'Con calma, unas semanas antes: para ti, el bebé y el acompañante.' },
+      { label: 'Revisa el plan de parto con tu matrona', desc: 'Última puesta a punto de tus preferencias antes del gran día.' },
+      { label: 'Reconoce las señales de parto', desc: 'Contracciones regulares y dolorosas, rotura de bolsa o pérdida del tapón mucoso: son buenas señales.' }
+    ]
+  }
+};
+
+const FOOD_DB = [
+  { name: 'Jamón ibérico / serrano', status: 'warning', tag: 'Congelar antes', desc: 'Riesgo de toxoplasmosis si no está curado. Es seguro si ha estado congelado a -18°C más de 48h, o si se cocina bien.' },
+  { name: 'Queso de cabra / brie / roquefort', status: 'warning', tag: 'Leer etiqueta', desc: '100% seguro si el envase indica "elaborado con leche pasteurizada". Evita solo los artesanales de leche cruda.' },
+  { name: 'Café / té / refrescos con cafeína', status: 'safe', tag: 'Con moderación', desc: 'Seguro. La evidencia recomienda no superar los 200 mg de cafeína diarios (1-2 tazas de café).' },
+  { name: 'Sushi / salmón crudo / marisco crudo', status: 'danger', tag: 'Evitar', desc: 'Riesgo de anisakis y bacterias como Listeria. No comas pescado crudo o ahumado en frío; cocina bien el pescado.' },
+  { name: 'Huevo frito / tortilla poco hecha', status: 'danger', tag: 'Cocinar bien', desc: 'Riesgo de salmonela. Clara y yema deben quedar completamente cocinadas y sólidas.' },
+  { name: 'Salmón o pescado azul pequeño cocinado', status: 'safe', tag: 'Recomendado', desc: 'Excelente aporte de omega-3 con bajo mercurio (sardina, boquerón, salmón). Cocínalo bien a la plancha o al horno.' },
+  { name: 'Lechuga / espinacas / ensaladas', status: 'safe', tag: 'Lavar bien', desc: 'Muy saludable y previene el estreñimiento. Lávalas bien bajo el grifo antes de comerlas crudas.' },
+  { name: 'Filete de ternera / carne a la plancha', status: 'safe', tag: 'Muy cocinada', desc: 'Excelente fuente de hierro. Evita el punto "sangrante" para descartar toxoplasmosis.' },
+  { name: 'Mayonesa comercial (envasada)', status: 'safe', tag: 'Apta', desc: 'Segura porque se elabora con huevo pasteurizado. Evita las salsas caseras de bar.' },
+  { name: 'Atún rojo / pez espada / tiburón', status: 'danger', tag: 'Evitar', desc: 'Altísimo nivel de mercurio, que puede afectar al sistema neurológico en desarrollo. El atún claro en lata sí es apto con moderación.' },
+  { name: 'Alcohol (vino, cerveza...)', status: 'danger', tag: 'Cero absoluto', desc: 'No existe una dosis mínima segura: evítalo por completo. La cerveza 0,0% es una gran alternativa.' },
+  { name: 'Embutido curado sin cocinar (chorizo, salchichón)', status: 'warning', tag: 'Congelar antes', desc: 'Mismo riesgo que el jamón crudo: congélalo 48h a -18°C o cocínalo bien antes de comerlo.' },
+  { name: 'Brotes crudos (alfalfa, soja)', status: 'danger', tag: 'Evitar crudos', desc: 'Fácil contaminación por Listeria en su cultivo. Cocínalos bien si quieres tomarlos.' },
+  { name: 'Leche cruda sin pasteurizar', status: 'danger', tag: 'Evitar', desc: 'Puede contener bacterias peligrosas. Consume siempre leche pasteurizada o UHT.' },
+  { name: 'Regaliz (natural, en cantidad)', status: 'warning', tag: 'Moderar', desc: 'En grandes cantidades se ha asociado a algún efecto sobre la tensión. Un consumo ocasional no es preocupante.' },
+  { name: 'Frutos secos naturales', status: 'safe', tag: 'Recomendado', desc: 'Buena fuente de energía y grasas saludables. No hay motivo para evitarlos salvo alergia conocida.' }
+];
+
+const SYMPTOMS_DB = {
+  'manchado': { emoji: '🩸', title: 'Manchado leve, rosado o marrón', phase: 'Sobre todo 1er trimestre', tag: 'normal', reason: 'En el primer mes es muy común (hasta 3 de cada 10 embarazos). Puede ser sangrado de implantación o que el cuello uterino, más irrigado, sangra un poco tras el roce.', advice: 'Mantén la calma y coméntalo en tu próxima visita. Si se vuelve rojo brillante, abundante y continuo, consulta en urgencias.' },
+  'sangrado-fuerte': { emoji: '🔴', title: 'Sangrado rojo intenso, como una regla fuerte', phase: 'Todo el embarazo', tag: 'alarma', reason: 'Un sangrado abundante y continuo, sobre todo con dolores cólicos agudos, requiere descartar una amenaza de aborto o de parto prematuro.', advice: 'Acude a urgencias obstétricas para que te hagan una ecografía. Mientras tanto, guarda reposo.' },
+  'pinchazos': { emoji: '⚡', title: 'Pinchazos o tirones tipo "regla"', phase: '1er trimestre', tag: 'normal', reason: 'Es tu útero trabajando: un músculo con ligamentos que se elonga al recibir al embrión. Los pinchazos leves confirman que se está ensanchando.', advice: 'Descansa, hidrátate y aplica calor suave y seco en la zona baja de la espalda; la molestia suele ceder en minutos.' },
+  'dolor-unilateral': { emoji: '⚠️', title: 'Dolor intenso y continuo de un solo lado', phase: '1er trimestre', tag: 'alarma', reason: 'Un dolor agudo y muy localizado en un lado del abdomen bajo, que no cede con el descanso, puede acompañar a un embarazo ectópico (fuera del útero).', advice: 'Acude a urgencias para descartarlo cuanto antes, especialmente si se suma dolor de hombro o mareo.' },
+  'nauseas': { emoji: '🤢', title: 'Náuseas o algún vómito matutino', phase: '1er trimestre', tag: 'normal', reason: 'La hormona hCG estimula el centro del vómito en tu cerebro. Suele alcanzar su pico entre la semana 8 y 10 y luego desaparece.', advice: 'Come algo seco antes de levantarte, reparte tus comidas en raciones pequeñas y evita olores fuertes.' },
+  'vomitos-persistentes': { emoji: '🤮', title: 'Vómitos repetidos que no dejan retener líquidos', phase: '1er trimestre', tag: 'alarma', reason: 'Si vomitas todo lo que ingieres, incluida el agua, durante más de 24h, hay riesgo de deshidratación (hiperemesis gravídica).', advice: 'Acude a urgencias: allí te hidratan con suero y te dan tratamiento seguro para frenar las náuseas.' },
+  'flujo': { emoji: '🤍', title: 'Flujo blanco abundante y sin olor', phase: 'Todo el embarazo', tag: 'normal', reason: 'El estrógeno aumenta el moco cervical blanco, que forma un tapón protector en el cuello del útero para aislar al bebé de bacterias.', advice: 'Totalmente normal. Usa ropa interior de algodón y evita salvaslips de plástico, que retienen humedad.' },
+  'fiebre': { emoji: '🌡️', title: 'Fiebre superior a 38 °C', phase: 'Todo el embarazo', tag: 'alarma', reason: 'La fiebre mantenida altera el entorno del embrión o feto. Siempre conviene identificar la causa (infección urinaria, virus...).', advice: 'El paracetamol es seguro para bajarla, pero acude a tu centro médico para que localicen el origen.' },
+  'acidez': { emoji: '🔥', title: 'Acidez o reflujo', phase: '2º-3er trimestre', tag: 'normal', reason: 'El útero presiona el estómago y la progesterona relaja la válvula entre esófago y estómago, favoreciendo el reflujo.', advice: 'Come poco y a menudo, no te tumbes justo después de comer y eleva el cabecero al dormir.' },
+  'hinchazon-leve': { emoji: '🦶', title: 'Hinchazón leve en pies y tobillos', phase: '3er trimestre', tag: 'normal', reason: 'Al final del día, la gravedad y el mayor volumen de sangre acumulan algo de líquido en las piernas: un cambio circulatorio esperable.', advice: 'Eleva las piernas al descansar y muévete con regularidad. Suele mejorar por la mañana.' },
+  'hinchazon-subita': { emoji: '😳', title: 'Hinchazón repentina en cara o manos', phase: '2º-3er trimestre', tag: 'alarma', reason: 'Una hinchazón repentina e importante en cara, manos o alrededor de los ojos puede señalar preeclampsia, que afecta a la tensión arterial.', advice: 'Contacta con tu matrona u hospital el mismo día para que revisen tensión y orina.' },
+  'dolor-cabeza-vision': { emoji: '👁️', title: 'Dolor de cabeza fuerte con visión borrosa', phase: '2º-3er trimestre', tag: 'alarma', reason: 'Un dolor de cabeza intenso que no mejora, junto a visión borrosa, destellos o pitidos, puede ser señal de preeclampsia.', advice: 'Acude a urgencias para que controlen tu tensión arterial cuanto antes.' },
+  'calambres-piernas': { emoji: '🦵', title: 'Calambres en las piernas', phase: '2º-3er trimestre', tag: 'normal', reason: 'Muy comunes por la noche, por el peso extra, la circulación más lenta y cambios en minerales como el magnesio.', advice: 'Estira la pantorrilla antes de dormir, mantente hidratada y camina a diario.' },
+  'varices': { emoji: '🔵', title: 'Varices en las piernas', phase: '2º-3er trimestre', tag: 'normal', reason: 'El mayor volumen de sangre y la presión del útero sobre las venas pélvicas dificultan el retorno venoso de las piernas.', advice: 'Usa medias de compresión si te las recomiendan, evita estar de pie mucho tiempo y eleva las piernas.' },
+  'braxton-hicks': { emoji: '🤰', title: 'Contracciones esporádicas e indoloras', phase: '3er trimestre', tag: 'normal', reason: 'Son contracciones de "entrenamiento": el útero se tensa de forma irregular para prepararse para el parto real.', advice: 'Cambia de postura o date un baño templado; suelen calmarse y no siguen un patrón regular.' },
+  'contracciones-prematuras': { emoji: '⏰', title: 'Contracciones regulares y dolorosas antes de la semana 37', phase: 'Antes de sem. 37', tag: 'alarma', reason: 'Contracciones que van a más en frecuencia e intensidad antes de la semana 37 pueden anunciar un parto prematuro.', advice: 'Llama a tu matrona o acude a urgencias para que valoren el cuello uterino.' },
+  'movimientos-disminuidos': { emoji: '👶', title: 'Notas muchos menos movimientos que antes', phase: '3er trimestre', tag: 'alarma', reason: 'Desde el tercer trimestre tu bebé tiene un patrón de movimientos propio. Una disminución notable y mantenida es una señal a vigilar.', advice: 'Túmbate de lado, toma algo y cuenta los movimientos una hora. Si notas muchos menos, contacta con tu matrona sin esperar.' },
+  'picor-intenso': { emoji: '✋', title: 'Picor intenso en manos y pies, sobre todo de noche', phase: '3er trimestre', tag: 'alarma', reason: 'Un picor muy intenso en palmas y plantas que empeora de noche puede indicar colestasis del embarazo (acumulación de sales biliares).', advice: 'Coméntalo cuanto antes con tu matrona: un análisis de sangre sencillo lo confirma o descarta.' },
+  'perdida-liquido': { emoji: '💧', title: 'Pérdida de líquido claro e inodoro', phase: '3er trimestre', tag: 'alarma', reason: 'Una pérdida de líquido claro, en goteo o de golpe, puede ser la rotura de la bolsa amniótica.', advice: 'Acude a tu hospital de referencia para que lo valoren, sin importar la hora ni la semana.' },
+  'hormigueo-manos': { emoji: '🤲', title: 'Hormigueo o adormecimiento en las manos', phase: '2º-3er trimestre', tag: 'consulta', reason: 'La retención de líquidos puede comprimir el nervio de la muñeca, dando hormigueo (síndrome del túnel carpiano).', advice: 'Mueve las muñecas y evita apoyarte mucho sobre ellas. Coméntalo en tu próxima revisión; no es urgente.' },
+  'dolor-lumbar': { emoji: '🔙', title: 'Dolor lumbar o de espalda', phase: 'Todo el embarazo', tag: 'normal', reason: 'El centro de gravedad cambia y una hormona (relaxina) afloja los ligamentos para preparar la pelvis, lo que sobrecarga la zona lumbar.', advice: 'El calor local, estiramientos suaves y el trabajo de suelo pélvico ayudan mucho.' }
+};
+
+const CALM_QUOTES = [
+  'Mi cuerpo está perfectamente diseñado para proteger y nutrir. Confío en mi sabiduría biológica.',
+  'El embarazo es un proceso fisiológico natural, no una dolencia. Mi cuerpo sabe crear vida.',
+  'Respiro hondo y libero las preocupaciones que no puedo controlar. Mi bebé siente mi tranquilidad.',
+  'Cada pequeño síntoma es una señal de que mi cuerpo está creando un hogar perfecto.',
+  'Elijo la ciencia por encima del miedo. No necesito buscar en internet, estoy a salvo.',
+  'Paso a paso, día a día. Hoy estoy bien, mi bebé está bien. Todo marcha a su ritmo.',
+  'Puedo sentir dudas y aun así confiar en mi cuerpo y en mi equipo médico.',
+  'Mi tranquilidad también alimenta a mi bebé. Merezco calma.'
+];
+const BREATH_TEXTS = ['Inhala...', 'Mantén...', 'Exhala...'];
+const STATUS_STYLE = {
+  safe: { bg: '#E7EFE7', text: '#4F7358' },
+  warning: { bg: '#F5EBD8', text: '#A9782E' },
+  danger: { bg: '#F7E4E1', text: '#A8433A' }
+};
+const NAV_BASE = "flex:1;padding:10px 4px;border-radius:14px;font-size:11px;font-weight:600;text-align:center;cursor:pointer;border:none;transition:background .2s,color .2s;font-family:'Work Sans',sans-serif;display:flex;flex-direction:column;align-items:center;gap:2px;";
+
+class Component extends DCLogic {
+  state = {
+    activeTab: 'semana',
+    zenMode: true,
+    lmpDate: '',
+    selectedWeek: 12,
+    foodQuery: '',
+    selectedSymptomKey: null,
+    checkedItems: {},
+    calmQuoteIndex: 0,
+    breathPhase: 0
+  };
+
+  componentDidMount() {
+    const patch = {};
+    if (typeof this.props.zenModeDefault === 'boolean') patch.zenMode = this.props.zenModeDefault;
+    if (this.props.defaultWeek) patch.selectedWeek = this.props.defaultWeek;
+    try {
+      const saved = JSON.parse(localStorage.getItem('maternidadSerena_v1') || '{}');
+      if (saved.lmpDate) {
+        patch.lmpDate = saved.lmpDate;
+        const w = computeWeekFromLmp(saved.lmpDate);
+        if (w) patch.selectedWeek = Math.min(40, w);
+      }
+      if (typeof saved.zenMode === 'boolean') patch.zenMode = saved.zenMode;
+      if (saved.checkedItems) patch.checkedItems = saved.checkedItems;
+    } catch (e) {}
+    if (Object.keys(patch).length) this.setState(patch);
+
+    this._breathTimer = setInterval(() => {
+      this.setState(s => ({ breathPhase: (s.breathPhase + 1) % 3 }));
+    }, 3000);
+  }
+
+  componentWillUnmount() {
+    if (this._breathTimer) clearInterval(this._breathTimer);
+  }
+
+  persist(partial) {
+    try {
+      const current = JSON.parse(localStorage.getItem('maternidadSerena_v1') || '{}');
+      localStorage.setItem('maternidadSerena_v1', JSON.stringify(Object.assign({}, current, partial)));
+    } catch (e) {}
+  }
+
+  setLmpDate(v) {
+    const w = computeWeekFromLmp(v);
+    this.setState({ lmpDate: v, selectedWeek: w ? Math.min(40, w) : this.state.selectedWeek });
+    this.persist({ lmpDate: v });
+  }
+
+  goToCurrentWeek() {
+    const w = computeWeekFromLmp(this.state.lmpDate);
+    if (w) this.setState({ selectedWeek: Math.min(40, w) });
+  }
+
+  setWeek(n) {
+    this.setState({ selectedWeek: Math.max(1, Math.min(40, n)) });
+  }
+
+  switchTab(name) { this.setState({ activeTab: name }); }
+
+  toggleZen() {
+    const v = !this.state.zenMode;
+    this.setState({ zenMode: v });
+    this.persist({ zenMode: v });
+  }
+
+  toggleChecked(id) {
+    const next = Object.assign({}, this.state.checkedItems);
+    next[id] = !next[id];
+    this.setState({ checkedItems: next });
+    this.persist({ checkedItems: next });
+  }
+
+  selectSymptom(key) { this.setState({ selectedSymptomKey: key }); }
+  closeSymptom() { this.setState({ selectedSymptomKey: null }); }
+  setFoodQuery(v) { this.setState({ foodQuery: v }); }
+
+  nextCalmQuote() {
+    let idx = this.state.calmQuoteIndex;
+    if (CALM_QUOTES.length > 1) {
+      while (idx === this.state.calmQuoteIndex) idx = Math.floor(Math.random() * CALM_QUOTES.length);
+    }
+    this.setState({ calmQuoteIndex: idx });
+  }
+
+  renderVals() {
+    const st = this.state;
+    const motherName = this.props.motherName || 'Inés';
+    const hasDate = !!st.lmpDate;
+    const noDate = !hasDate;
+    const currentComputedWeek = hasDate ? computeWeekFromLmp(st.lmpDate) : null;
+    const selectedWeek = st.selectedWeek;
+    const weekData = WEEKLY_DATA[selectedWeek - 1] || WEEKLY_DATA[11];
+    const trimesterNum = trimesterOfWeek(selectedWeek);
+    const trimesterContent = TRIMESTER_CONTENT[trimesterNum];
+    const progressPct = Math.round((selectedWeek / 40) * 100);
+    const showBackToCurrent = !!(hasDate && currentComputedWeek && currentComputedWeek <= 40 && currentComputedWeek !== selectedWeek);
+
+    const practicalChecklist = trimesterContent.practical.map((item, i) => {
+      const id = trimesterNum + '-' + i;
+      const checked = !!st.checkedItems[id];
+      return {
+        label: item.label,
+        desc: item.desc,
+        checked: checked,
+        toggle: () => this.toggleChecked(id),
+        rowStyle: 'display:flex;align-items:flex-start;gap:10px;padding:12px;border-radius:14px;cursor:pointer;background:' + (checked ? '#E7EFE7' : '#FBF6F0') + ';',
+        checkStyle: 'width:20px;height:20px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;margin-top:1px;border:2px solid ' + (checked ? '#4F7358' : '#C9BEB2') + ';background:' + (checked ? '#4F7358' : '#fff') + ';'
+      };
+    });
+
+    const q = (st.foodQuery || '').toLowerCase();
+    const foodResults = FOOD_DB.filter(f => !q || f.name.toLowerCase().includes(q) || f.desc.toLowerCase().includes(q))
+      .map(f => {
+        const c = STATUS_STYLE[f.status];
+        return { name: f.name, tag: f.tag, desc: f.desc, tagBg: c.bg, tagColor: c.text };
+      });
+
+    const symptomsList = Object.keys(SYMPTOMS_DB).map(key => {
+      const s = SYMPTOMS_DB[key];
+      const statusKey = s.tag === 'normal' ? 'safe' : (s.tag === 'alarma' ? 'danger' : 'warning');
+      const c = STATUS_STYLE[statusKey];
+      return { key: key, emoji: s.emoji, title: s.title, phase: s.phase, dotBg: c.text, select: () => this.selectSymptom(key) };
+    });
+
+    let selectedSymptom = null;
+    if (st.selectedSymptomKey && SYMPTOMS_DB[st.selectedSymptomKey]) {
+      const s = SYMPTOMS_DB[st.selectedSymptomKey];
+      const statusKey = s.tag === 'normal' ? 'safe' : (s.tag === 'alarma' ? 'danger' : 'warning');
+      const c = STATUS_STYLE[statusKey];
+      const tagLabel = s.tag === 'normal' ? '🟢 NORMAL' : (s.tag === 'alarma' ? '🔴 URGENCIA' : '🟡 SIN PRISA');
+      selectedSymptom = { emoji: s.emoji, title: s.title, reason: s.reason, advice: s.advice, tagLabel: tagLabel, tagBg: c.bg, tagColor: c.text };
+    }
+
+    const activeTab = st.activeTab;
+
+    return {
+      motherName: motherName,
+      hasDate: hasDate,
+      noDate: noDate,
+      todayIso: isoToday(),
+      lmpDate: st.lmpDate,
+      currentComputedWeek: currentComputedWeek,
+      dueLabel: hasDate ? dueDateLabel(st.lmpDate) : '',
+      daysLeft: hasDate ? daysRemaining(st.lmpDate) : 0,
+      handleLmpChange: (e) => this.setLmpDate(e.target.value),
+
+      goSemana: () => this.switchTab('semana'),
+      goNutricion: () => this.switchTab('nutricion'),
+      goSintomas: () => this.switchTab('sintomas'),
+      goCalma: () => this.switchTab('calma'),
+      showSemana: activeTab === 'semana',
+      showNutricion: activeTab === 'nutricion',
+      showSintomas: activeTab === 'sintomas',
+      showCalma: activeTab === 'calma',
+      noShowSemana: activeTab !== 'semana',
+      noShowNutricion: activeTab !== 'nutricion',
+      noShowSintomas: activeTab !== 'sintomas',
+      noShowCalma: activeTab !== 'calma',
+
+      onToggleZen: () => this.toggleZen(),
+      zenBtnLabel: st.zenMode ? 'Activado' : 'Desactivado',
+      zenBtnStyle: 'font-size:11px;font-weight:700;border:none;border-radius:999px;padding:8px 14px;cursor:pointer;white-space:nowrap;' + (st.zenMode ? 'background:#2F4F4A;color:#fff;' : 'background:#EAE3DB;color:#6B6058;'),
+      showExtra: !st.zenMode,
+
+      isT1Current: trimesterNum === 1,
+      isT2Current: trimesterNum === 2,
+      isT3Current: trimesterNum === 3,
+      trimesterLabel: trimesterContent.label,
+      trimesterRange: trimesterContent.range,
+      selectedWeek: selectedWeek,
+      progressPct: progressPct,
+      showBackToCurrent: showBackToCurrent,
+      onGoToCurrentWeek: () => this.goToCurrentWeek(),
+      prevWeek: () => this.setWeek(selectedWeek - 1),
+      nextWeek: () => this.setWeek(selectedWeek + 1),
+      handleWeekSlider: (e) => this.setWeek(parseInt(e.target.value, 10)),
+
+      weekSize: weekData.s,
+      weekLength: weekData.l,
+      weekWeight: weekData.w,
+      weekMilestone: weekData.m,
+
+      bodyChangesList: trimesterContent.bodyChanges,
+      sleepList: trimesterContent.sleep,
+      movementList: trimesterContent.movement,
+      emotionalList: trimesterContent.emotional,
+      practicalChecklist: practicalChecklist,
+
+      nutritionFocus: trimesterContent.nutritionFocus,
+      foodQuery: st.foodQuery,
+      onFoodInput: (e) => this.setFoodQuery(e.target.value),
+      foodResults: foodResults,
+
+      symptomsList: symptomsList,
+      hasSelectedSymptom: !!selectedSymptom,
+      selectedSymptom: selectedSymptom,
+      onCloseSymptom: () => this.closeSymptom(),
+
+      calmQuote: CALM_QUOTES[st.calmQuoteIndex],
+      onNextQuote: () => this.nextCalmQuote(),
+      breathText: BREATH_TEXTS[st.breathPhase]
+    };
+  }
+}
+
+</script>
+</body>
+</html>
